@@ -1,6 +1,9 @@
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class Server {
 	private static ServerSocket Listener; // Application Serveur
@@ -8,9 +11,13 @@ public class Server {
 	throws Exception {
 	// Compteur incrémenté à chaque connexion d'un client au serveur
 	int clientNumber = 0;
-	// Adresse et port du serveur
-	String serverAddress = "127.0.0.1"; 
-	int serverPort = 5005;
+	
+	BufferedReader reader = new BufferedReader(
+            new InputStreamReader(System.in));
+	System.out.println("Server address : ");
+    String serverAddress = reader.readLine();
+    System.out.println("Server port : ");
+	int serverPort = Integer.parseInt(reader.readLine());
 // Création de la connexien pour communiquer ave les, clients
 	Listener = new ServerSocket();
 	Listener.setReuseAddress(true);
