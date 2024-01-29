@@ -1,6 +1,10 @@
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -11,9 +15,21 @@ public class server {
 
     public static void main(String[] args) {
         try {
+        	
+        	BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(System.in));
+        	System.out.println("Server address : ");
+            String serverAddress = reader.readLine();
+            System.out.println("Server port : ");
+        	int serverPort = Integer.parseInt(reader.readLine());
+        	
             // Create a server socket on a specific port
-            ServerSocket serverSocket = new ServerSocket(4004);
-            System.out.println("Server is listening on port 4004...");
+        	InetAddress serverIP = InetAddress.getByName(serverAddress);
+        	
+            ServerSocket serverSocket = new ServerSocket();
+            serverSocket.bind(new InetSocketAddress(serverIP, serverPort));
+ 
+            System.out.format("The server is running on %s:%d%n", serverAddress, serverPort);
 
             while (true) {
                 // Wait for a client to connect

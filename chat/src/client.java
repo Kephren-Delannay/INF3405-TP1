@@ -1,13 +1,27 @@
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public class client {
     public static void main(String[] args) {
         try {
+        	
+        	BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(System.in));
+        	System.out.println("Server address : ");
+            String serverAddress = reader.readLine();
+            System.out.println("Server port : ");
+        	int serverPort = Integer.parseInt(reader.readLine());
+        	
+        	InetAddress serverIP = InetAddress.getByName(serverAddress);
+        	
             // Connect to the server with a specific IP address and port
-            Socket socket = new Socket("127.0.0.1", 4004);
+            Socket socket = new Socket(serverAddress, serverPort);
             System.out.println("Connected to server.");
 
             // Create input and output streams for communication
