@@ -7,7 +7,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-public class client {
+public class client {	
     public static void main(String[] args) {
         try {
         	
@@ -38,7 +38,8 @@ public class client {
                             break; // Connection closed by server
                         }
                         String receivedMessage = new String(buffer, 0, bytesRead);
-                        System.out.println("Server: " + receivedMessage);
+                        // System.out.println("Server: " + receivedMessage);
+                        System.out.println(receivedMessage);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
