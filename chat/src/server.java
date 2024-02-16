@@ -128,10 +128,8 @@ public class server {
                         Message message = new Message(user, clientSocket.getInetAddress().toString(),clientSocket.getPort() ,receivedMessage);
                         System.out.println(message);
                         addToHistory(message);
-                        
-
                         // Broadcast the message to all clients
-                        broadcastMessage(clientSocket, receivedMessage);
+                        broadcastMessage(clientSocket, message);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -146,12 +144,19 @@ public class server {
         }
     }
 
-    private static void broadcastMessage(Socket sender, String message) {
+    private static void broadcastMessage(Socket sender, Message message) {
         for (Socket client : clients) {
             if (client != sender) {
                 try {
+                	String messageString = "[" + message.username + " - " + message.userIP.substring(1) + ":"
+            				+ message.userPort + " - " + message.timeSent.get(Calendar.YEAR) + "-"
+            				+ message.monthSent + "-" + message.timeSent.get(Calendar.DATE)
+            				+ "@" + message.timeSent.get(Calendar.HOUR) + ":"
+            				+ message.timeSent.get(Calendar.MINUTE) + ":" + message.timeSent.get(Calendar.SECOND)
+            				+ "]:" + message.content;
+                	
                     OutputStream clientOutput = client.getOutputStream();
-                    clientOutput.write(message.getBytes());
+                    clientOutput.write(messageString.getBytes());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -201,13 +206,11 @@ public class server {
 			
 			if (history.size() < 15) {
                 for (int i = 0; i < history.size(); i++) {
-                    System.out.println(history.get(i));
                     clientOutput.write((history.get(i)).getBytes());
                     clientOutput.write("\n".getBytes());
                 }
             } else if (history.size() >= 15){
                 for (int i = history.size() - 15; i < history.size(); i++) {
-                    System.out.println(history.get(i));
                     clientOutput.write((history.get(i)).getBytes());
                     clientOutput.write("\n".getBytes());
                 }
@@ -242,7 +245,6 @@ public class server {
                 history.add(line);
                 
             }
-            System.out.println(history);
         } catch (IOException e) {
             e.printStackTrace();
         }
