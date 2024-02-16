@@ -63,7 +63,7 @@ public class server {
  
             System.out.format("The server is running on %s:%d%n", serverAddress, serverPort);
             
-            getHistoryFromJSON();
+            //getHistoryFromJSON();
 
             while (true) {
                 // Wait for a client to connect
@@ -202,6 +202,7 @@ public class server {
 	private static void broadcastHistory(Socket client) throws Exception {
 		try {
 			getHistoryFromJSON();
+			System.out.println("taille history : " + history.size());
 			OutputStream clientOutput = client.getOutputStream();
 			
 			if (history.size() < 15) {
@@ -239,6 +240,7 @@ public class server {
     
     
 	private static void getHistoryFromJSON() throws Exception {
+		history = new ArrayList<>();
 		try (BufferedReader bufferedReader = new BufferedReader(new FileReader(HISTORY_FILE))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
