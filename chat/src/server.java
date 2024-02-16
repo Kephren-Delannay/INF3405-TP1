@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -12,24 +13,27 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 
 public class server {
-	private static final String HISTORY_FILE = "historique.json";
+	private static final String HISTORY_FILE = "historique.txt";
 	private static final String ACCOUNTS_FILE = "accounts.txt";
 	
 	
     private static List<Socket> clients = new ArrayList<>();
-    private static List<Message> history = new ArrayList<>();
+    private static List<String> history = new ArrayList<>();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         try {
         	
         	
@@ -59,7 +63,7 @@ public class server {
  
             System.out.format("The server is running on %s:%d%n", serverAddress, serverPort);
             
-            history = getHistoryFromJSON();
+            getHistoryFromJSON();
 
             while (true) {
                 // Wait for a client to connect
@@ -121,7 +125,6 @@ public class server {
                         }
                         String receivedMessage = new String(buffer, 0, bytesRead);
                         
-                        //TODO: ajouter le username du client
                         Message message = new Message(user, clientSocket.getInetAddress().toString(),clientSocket.getPort() ,receivedMessage);
                         System.out.println(message);
                         addToHistory(message);
@@ -132,7 +135,9 @@ public class server {
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
+                } catch (Exception e) {
+					e.printStackTrace();
+				}
             });
             receiveThread.start();
 
@@ -189,53 +194,60 @@ public class server {
     	return true;
     }
     
-	private static void broadcastHistory(Socket client) {
+	private static void broadcastHistory(Socket client) throws Exception {
 		try {
+			getHistoryFromJSON();
 			OutputStream clientOutput = client.getOutputStream();
-			for (Message message : history) {
-				StringBuilder messageToSend = new StringBuilder();
-				messageToSend.append("[" + message.username + " - " + message.userIP.substring(1) + ":"
-						+ message.userPort + " - ");
-				messageToSend.append(message.timeSent.get(Calendar.YEAR) + "-"
-						+ message.monthSent + "-" + message.timeSent.get(Calendar.DATE)
-						+ "@" + message.timeSent.get(Calendar.HOUR) + ":"
-						+ message.timeSent.get(Calendar.MINUTE) + ":" + message.timeSent.get(Calendar.SECOND)
-						+ "]:");
-				messageToSend.append(message.content + "\n");
-				clientOutput.write((messageToSend.toString()).getBytes());
-			}
+			
+			if (history.size() < 15) {
+                for (int i = 0; i < history.size(); i++) {
+                    System.out.println(history.get(i));
+                    clientOutput.write((history.get(i)).getBytes());
+                    clientOutput.write("\n".getBytes());
+                }
+            } else if (history.size() >= 15){
+                for (int i = history.size() - 15; i < history.size(); i++) {
+                    System.out.println(history.get(i));
+                    clientOutput.write((history.get(i)).getBytes());
+                    clientOutput.write("\n".getBytes());
+                }
+            }
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
     
 	private static void addToHistory(Message message) {
-		history.add(0, message);
-		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(HISTORY_FILE))) {
-            objectOutputStream.writeObject(message);
-            objectOutputStream.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+		String messageString = "[" + message.username + " - " + message.userIP.substring(1) + ":"
+				+ message.userPort + " - " + message.timeSent.get(Calendar.YEAR) + "-"
+				+ message.monthSent + "-" + message.timeSent.get(Calendar.DATE)
+				+ "@" + message.timeSent.get(Calendar.HOUR) + ":"
+				+ message.timeSent.get(Calendar.MINUTE) + ":" + message.timeSent.get(Calendar.SECOND)
+				+ "]:" + message.content;
+		history.add(messageString);		
+		try (FileWriter fileWriter = new FileWriter(HISTORY_FILE, true);
+				BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+	             PrintWriter printWriter = new PrintWriter(bufferedWriter)) {
+	            printWriter.println(messageString);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
 	}
     
-	private static void saveToJSON(List<Message> message) {
-		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(HISTORY_FILE))) {
-            objectOutputStream.writeObject(message);
-            objectOutputStream.flush();
+    
+	private static void getHistoryFromJSON() throws Exception {
+		try (BufferedReader bufferedReader = new BufferedReader(new FileReader(HISTORY_FILE))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                history.add(line);
+                
+            }
+            System.out.println(history);
         } catch (IOException e) {
             e.printStackTrace();
         }
 	}
 	
-	private static List<Message> getHistoryFromJSON() {
-		try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(HISTORY_FILE))) {
-			return (List<Message>) objectInputStream.readObject();
-		} catch (IOException | ClassNotFoundException e) {
-			return new ArrayList<>();
-		}
-	}
-    
     private static class Message implements Serializable{
         private String username;
         private String userIP;
